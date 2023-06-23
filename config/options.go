@@ -150,6 +150,7 @@ type Options struct {
 	watchdog                           bool
 	invidiousInstance                  string
 	proxyPrivateKey                    []byte
+	trustedDomains                     []string
 }
 
 // NewOptions returns Options with default values.
@@ -219,6 +220,7 @@ func NewOptions() *Options {
 		watchdog:                           defaultWatchdog,
 		invidiousInstance:                  defaultInvidiousInstance,
 		proxyPrivateKey:                    randomKey,
+		trustedDomains:                     []string{},
 	}
 }
 
@@ -546,6 +548,10 @@ func (o *Options) ProxyPrivateKey() []byte {
 	return o.proxyPrivateKey
 }
 
+func (o *Options) TrustedDomains() []string {
+	return o.trustedDomains
+}
+
 // SortedOptions returns options as a list of key value pairs, sorted by keys.
 func (o *Options) SortedOptions(redactSecret bool) []*Option {
 	var keyValues = map[string]interface{}{
@@ -612,6 +618,7 @@ func (o *Options) SortedOptions(redactSecret bool) []*Option {
 		"SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL": o.schedulerEntryFrequencyMinInterval,
 		"SCHEDULER_SERVICE":                      o.schedulerService,
 		"SERVER_TIMING_HEADER":                   o.serverTimingHeader,
+		"TRUSTED_DOMAINS":                        o.trustedDomains,
 		"WORKER_POOL_SIZE":                       o.workerPoolSize,
 		"WATCHDOG":                               o.watchdog,
 	}

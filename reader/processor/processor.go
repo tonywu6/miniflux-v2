@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,6 +36,19 @@ var (
 	iso8601Regex           = regexp.MustCompile(`^P((?P<year>\d+)Y)?((?P<month>\d+)M)?((?P<week>\d+)W)?((?P<day>\d+)D)?(T((?P<hour>\d+)H)?((?P<minute>\d+)M)?((?P<second>\d+)S)?)?$`)
 	customReplaceRuleRegex = regexp.MustCompile(`rewrite\("(.*)"\|"(.*)"\)`)
 )
+
+func shouldSanitize(feedSource string) bool {
+	u, _ := url.Parse(feedSource)
+	if u == nil {
+		return true
+	}
+	for _, d := range config.Opts.TrustedDomains() {
+		if d == u.Host {
+			return false
+		}
+	}
+	return true
+}
 
 // ProcessFeedEntries downloads original web page for entries and apply filters.
 func ProcessFeedEntries(store *storage.Storage, feed *model.Feed, user *model.User) {
@@ -87,7 +101,9 @@ func ProcessFeedEntries(store *storage.Storage, feed *model.Feed, user *model.Us
 		rewrite.Rewriter(url, entry, feed.RewriteRules)
 
 		// The sanitizer should always run at the end of the process to make sure unsafe HTML is filtered.
-		entry.Content = sanitizer.Sanitize(url, entry.Content)
+		if shouldSanitize(feed.FeedURL) {
+			entry.Content = sanitizer.Sanitize(url, entry.Content)
+		}
 
 		if entryIsNew {
 			intg, err := store.Integration(feed.UserID)
@@ -173,7 +189,10 @@ func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User)
 	}
 
 	rewrite.Rewriter(url, entry, entry.Feed.RewriteRules)
-	entry.Content = sanitizer.Sanitize(url, entry.Content)
+
+	if shouldSanitize(feed.FeedURL) {
+		entry.Content = sanitizer.Sanitize(url, entry.Content)
+	}
 
 	return nil
 }

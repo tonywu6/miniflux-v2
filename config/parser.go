@@ -223,6 +223,8 @@ func (p *Parser) parseLines(lines []string) (err error) {
 			randomKey := make([]byte, 16)
 			rand.Read(randomKey)
 			p.opts.proxyPrivateKey = parseBytes(value, randomKey)
+		case "TRUSTED_DOMAINS":
+			p.opts.trustedDomains = parseStringList(value, []string{})
 		}
 	}
 
